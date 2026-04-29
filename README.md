@@ -8,7 +8,7 @@
 
 Read-only Postgres operational diagnostics over MCP. Lock contention,
 long-running transactions, replication lag, bloat, slow queries, cache
-hit ratios — surfaced to Claude (or any MCP client) without giving it
+hit ratios. Surfaced to Claude (or any MCP client) without giving it
 write access.
 
 ```mermaid
@@ -20,16 +20,14 @@ flowchart LR
     C -->|narrative + queries to run| O
 ```
 
-## Why
-
 Most "AI + database" projects let an agent run arbitrary SQL. That's a
 production accident waiting to happen. This server takes the other side:
 nine fixed read-only tools, a hard-enforced read-only role, a
 per-statement 5-second timeout. The agent gets a Postgres health report.
 Production gets to keep its day.
 
-It pairs well with [`postgres-production-playbook`](https://github.com/sarteta/postgres-production-playbook)
-— the playbook teaches a human what to look for; the doctor lets a
+It pairs well with [`postgres-production-playbook`](https://github.com/sarteta/postgres-production-playbook).
+The playbook teaches a human what to look for; the doctor lets a
 machine surface it on demand.
 
 ## What you get
@@ -51,7 +49,7 @@ Nine MCP tools, all read-only:
 Every tool is a single literal `SELECT` against `pg_stat_*` /
 `pg_locks` / `pg_database`. No user input is ever interpolated as SQL.
 
-## Security model — read this first
+## Security model -- read this first
 
 The server **refuses to start** unless the connecting role passes four
 checks:
@@ -168,7 +166,7 @@ The shipped tests cover:
   DDL/DML keywords, every query starts with `WITH` or `SELECT`,
   positional binds only.
 
-Tests use fakes — no live database required to run them.
+Tests use fakes; no live database required to run them.
 
 ## Roadmap
 
