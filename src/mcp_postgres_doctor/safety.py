@@ -112,8 +112,17 @@ def assert_read_only(conn: psycopg.Connection) -> RolePosture:
 def with_statement_timeout(
     conn: psycopg.Connection, timeout_ms: int = DEFAULT_STATEMENT_TIMEOUT_MS
 ) -> None:
-    """Set a per-transaction statement_timeout. Caller is in a transaction."""
+    """Set a per-transaction statement_timeout. Caller is in a transaction.
+
+    Postgres SET commands cannot use bind parameters, so we validate the int
+    type ourselves and inline it as a literal. Type-checking the input is
+    sufficient because the only call sites pass either the module default or
+    a hardcoded int from a test.
+    """
+    if not isinstance(timeout_ms, int) or isinstance(timeout_ms, bool):
+        raise TypeError(f"timeout_ms must be int, got {type(timeout_ms).__name__}")
     if timeout_ms <= 0:
         raise ValueError(f"timeout_ms must be > 0, got {timeout_ms}")
     with conn.cursor() as cur:
-        cur.execute("SET LOCAL statement_timeout = %s", (str(timeout_ms),))
+        # Safe: timeout_ms is type-validated as a positive int above.
+        cur.execute(f"SET LOCAL statement_timeout = {timeout_ms}")

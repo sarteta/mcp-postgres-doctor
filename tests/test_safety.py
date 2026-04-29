@@ -112,16 +112,32 @@ def test_with_statement_timeout_executes_set_local():
     with_statement_timeout(conn, 1500)
     assert len(cur.executed) == 1
     sql, params = cur.executed[0]
-    assert "SET LOCAL statement_timeout" in sql
-    assert params == ("1500",)
+    # SET commands can't use bind params; we inline a type-validated int.
+    assert sql == "SET LOCAL statement_timeout = 1500"
 
 
 def test_with_statement_timeout_default():
     cur = FakeCursor([])
     conn = FakeConn(cur)
     with_statement_timeout(conn)
-    sql, params = cur.executed[0]
-    assert params == (str(DEFAULT_STATEMENT_TIMEOUT_MS),)
+    sql, _ = cur.executed[0]
+    assert sql == f"SET LOCAL statement_timeout = {DEFAULT_STATEMENT_TIMEOUT_MS}"
+
+
+def test_with_statement_timeout_rejects_non_int():
+    """String input must be rejected — guards the inline-int path."""
+    cur = FakeCursor([])
+    conn = FakeConn(cur)
+    with pytest.raises(TypeError):
+        with_statement_timeout(conn, "5000; DROP TABLE x")  # type: ignore[arg-type]
+
+
+def test_with_statement_timeout_rejects_bool():
+    """bool is a subclass of int in Python; we reject it explicitly."""
+    cur = FakeCursor([])
+    conn = FakeConn(cur)
+    with pytest.raises(TypeError):
+        with_statement_timeout(conn, True)  # type: ignore[arg-type]
 
 
 def test_with_statement_timeout_rejects_zero():
