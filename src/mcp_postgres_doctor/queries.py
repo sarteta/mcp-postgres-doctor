@@ -88,16 +88,16 @@ ORDER BY replay_lsn
 # basic heuristic from the Postgres wiki because it requires no extension.
 # For exact numbers operators should run pgstattuple separately.
 TABLE_BLOAT_ESTIMATE = """
-WITH constants AS (
-    SELECT current_setting('block_size')::int AS bs, 23 AS hdr, 8 AS ma
-), tbl AS (
+WITH tbl AS (
     SELECT
-        schemaname, tablename,
-        n_live_tup, n_dead_tup,
+        schemaname,
+        relname AS tablename,
+        n_live_tup,
+        n_dead_tup,
         CASE WHEN n_live_tup + n_dead_tup = 0 THEN 0
              ELSE round(100.0 * n_dead_tup / (n_live_tup + n_dead_tup), 2)
         END AS dead_pct,
-        pg_total_relation_size(schemaname || '.' || tablename) AS total_bytes
+        pg_total_relation_size(relid) AS total_bytes
     FROM pg_stat_user_tables
 )
 SELECT
