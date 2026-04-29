@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-postgres-doctor"
+version = "0.1.0"
+description = "Read-only Postgres operational diagnostics over MCP"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Santiago Arteta", email = "santiagoarteta@gmail.com" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.2.0",
+    "psycopg[binary]>=3.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+mcp-postgres-doctor = "mcp_postgres_doctor.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/sarteta/mcp-postgres-doctor"
+Issues = "https://github.com/sarteta/mcp-postgres-doctor/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_postgres_doctor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

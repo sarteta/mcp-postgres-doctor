@@ -1,0 +1,12 @@
+{
+  "_comment": "Drop the relevant block into ~/.config/Claude/claude_desktop_config.json (or %APPDATA%/Claude on Windows). Restart Claude Desktop to pick it up.",
+  "mcpServers": {
+    "postgres-doctor": {
+      "command": "uvx",
+      "args": ["mcp-postgres-doctor"],
+      "env": {
+        "DATABASE_URL": "postgresql://postgres_doctor_ro:CHANGE_ME@localhost:5432/your_db"
+      }
+    }
+  }
+}
