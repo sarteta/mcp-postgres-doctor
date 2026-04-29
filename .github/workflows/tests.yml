@@ -8,14 +8,48 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test_admin_password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
+
+    env:
+      DATABASE_URL: postgresql://postgres:test_admin_password@localhost:5432/postgres
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: pip install -e ".[dev]"
-      - run: pytest -q
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5432 -U postgres && break
+            sleep 1
+          done
+
+      - name: Run unit tests
+        run: pytest -q tests/test_safety.py tests/test_queries.py
+
+      - name: Run integration tests against live Postgres
+        run: pytest -q tests/test_integration.py
