@@ -1,6 +1,7 @@
 # mcp-postgres-doctor
 
 [![tests](https://github.com/sarteta/mcp-postgres-doctor/actions/workflows/tests.yml/badge.svg)](https://github.com/sarteta/mcp-postgres-doctor/actions/workflows/tests.yml)
+[![docker](https://github.com/sarteta/mcp-postgres-doctor/actions/workflows/docker.yml/badge.svg)](https://github.com/sarteta/mcp-postgres-doctor/actions/workflows/docker.yml)
 [![python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
@@ -72,17 +73,38 @@ The threat model and trade-offs are in [`SECURITY.md`](./SECURITY.md).
 
 ## Install and run
 
-```bash
-# Install (Python 3.11+)
-pip install mcp-postgres-doctor
+### Docker (recommended)
 
-# Or via uvx for ephemeral runs
+```bash
+# 30-second demo: spin up Postgres seeded with the read-only role,
+# then build the doctor image and verify the safety check + tool
+# registration.
+git clone https://github.com/sarteta/mcp-postgres-doctor
+cd mcp-postgres-doctor
+docker compose up --build
+# expected: "OK -- server built. Registered tools:" plus 9 tool names
+```
+
+A pre-built image is pushed to GHCR on every main commit:
+
+```bash
+docker pull ghcr.io/sarteta/mcp-postgres-doctor:latest
+
+docker run --rm \
+  -e DATABASE_URL='postgresql://postgres_doctor_ro:STRONG_PW@host.docker.internal:5432/db' \
+  ghcr.io/sarteta/mcp-postgres-doctor:latest
+```
+
+The image runs as non-root (uid 10001), no shell, no build tools.
+
+### Python
+
+```bash
+pip install mcp-postgres-doctor      # not yet on PyPI; use the source clone
+# or
 uvx mcp-postgres-doctor
 
-# Configure the connection. Use the read-only role you set up above.
 export DATABASE_URL='postgresql://postgres_doctor_ro:STRONG_PW@host:5432/db'
-
-# Run
 mcp-postgres-doctor
 ```
 

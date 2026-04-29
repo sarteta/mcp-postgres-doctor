@@ -1,0 +1,46 @@
+# Demo stack: a Postgres seeded with the read-only role + the doctor service.
+# Run with:  docker compose up --build
+#
+# Notes:
+#   * The Postgres image picks up SQL files in /docker-entrypoint-initdb.d/ on
+#     first start. We mount examples/grant-readonly-role.sql there with a small
+#     wrapper that fills in a deterministic password and grants on the demo db.
+#   * The doctor service connects as postgres_doctor_ro. Its safety check runs
+#     at startup; if you tamper with the role's grants the container exits.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: demo_admin_password
+      POSTGRES_DB: demo
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - ./examples/init-demo-readonly-role.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+
+  doctor:
+    build: .
+    image: mcp-postgres-doctor:local
+    environment:
+      DATABASE_URL: postgresql://postgres_doctor_ro:demo_ro_password@postgres:5432/demo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # MCP servers communicate over stdio. For a demo, override entrypoint to
+    # just verify the safety check passes and exit cleanly.
+    entrypoint: ["python", "-c"]
+    command: |
+      "
+      from mcp_postgres_doctor.server import build_server
+      s = build_server()
+      tools = list(s._tool_manager._tools.keys())
+      print('OK — server built. Registered tools:')
+      for t in sorted(tools):
+          print(f'  - {t}')
+      "
