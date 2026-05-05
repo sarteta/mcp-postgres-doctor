@@ -177,6 +177,15 @@ Tests use fakes; no live database required to run them.
 - Optional schema-level scoping so you can restrict which user schemas
   the doctor reports on, even when the role has wider SELECT rights.
 
+## Related projects
+
+Same MCP-server pattern, different domain:
+
+- [`mcp-aws-cost-doctor`](https://github.com/sarteta/mcp-aws-cost-doctor) — read-only AWS cost diagnostic tools (idle EC2, orphaned EBS, unused EIPs, oversized RDS) over MCP.
+- [`mcp-supabase-latam`](https://github.com/sarteta/mcp-supabase-latam) — Supabase admin tools for LATAM SMBs over MCP.
+
+If you want both Postgres + AWS visibility in a single Claude session, mount this server alongside `mcp-aws-cost-doctor` — the agent can correlate database load with infrastructure waste in one conversation.
+
 ## License
 
 MIT (c) 2026 Santiago Arteta
